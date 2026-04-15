@@ -76,19 +76,12 @@ const TEMPLATE = `
 
           <div class="form-field">
             <label class="form-label" for="loan-term">
-              Loan Term <span class="form-label__required" aria-hidden="true">*</span>
+              Loan Term (Months) <span class="form-label__required" aria-hidden="true">*</span>
             </label>
-            <div style="display:flex;gap:var(--space-2);align-items:stretch;">
-              <input id="loan-term" class="form-input" type="text" inputmode="decimal"
-                     placeholder="30" autocomplete="off"
-                     data-tooltip="Repayment period — toggle between years and months" aria-required="true"
-                     style="flex:1;min-width:0;">
-              <div class="term-unit-toggle" role="group" aria-label="Term unit">
-                <button type="button" class="term-unit-btn is-active" data-unit="years">Yrs</button>
-                <button type="button" class="term-unit-btn" data-unit="months">Mo</button>
-              </div>
-            </div>
-            <div class="field-hint" id="loan-term-hint">e.g. 30 years = 360 months</div>
+            <input id="loan-term" class="form-input" type="text" inputmode="decimal"
+                   placeholder="360" autocomplete="off"
+                   data-tooltip="Total repayment period in months" aria-required="true">
+            <div class="field-hint" id="loan-term-hint">e.g. 360 months = 30 years &nbsp;|&nbsp; 60 months = 5 years</div>
             <div class="field-error" role="alert" aria-live="polite"></div>
           </div>
 
@@ -630,8 +623,6 @@ export function initLoan() {
   const nextBtn           = section.querySelector('#loan-next-btn');
   const pageInfo          = section.querySelector('#loan-page-info');
   const toggleBtn         = section.querySelector('#loan-toggle-all');
-  const termHint          = section.querySelector('#loan-term-hint');
-  const termUnitBtns      = section.querySelectorAll('.term-unit-toggle .term-unit-btn');
   const viewMonthlyBtn    = section.querySelector('#loan-view-monthly');
   const viewYearlyBtn     = section.querySelector('#loan-view-yearly');
 
@@ -639,36 +630,7 @@ export function initLoan() {
   let currentPage   = 1;
   let showAll       = false;
   let stdFirstDone  = false;
-  let termUnit      = 'years';    // 'years' | 'months'
   let scheduleView  = 'monthly';  // 'monthly' | 'yearly'
-
-  // ── Term unit toggle ─────────────────────────────────────────
-
-  function setTermUnit(unit) {
-    const prev = termUnit;
-    termUnit   = unit;
-    const val  = parseNum(termInput.value);
-
-    // Convert the displayed value when switching units
-    if (isFinite(val) && val > 0) {
-      if (prev === 'years' && unit === 'months') {
-        termInput.value = String(Math.round(val * 12));
-      } else if (prev === 'months' && unit === 'years') {
-        termInput.value = String(Math.round(val / 12));
-      }
-    }
-
-    termInput.placeholder = unit === 'years' ? '30' : '360';
-    termHint.textContent  = unit === 'years'
-      ? 'e.g. 30 years = 360 months'
-      : 'e.g. 360 months = 30 years';
-
-    termUnitBtns.forEach(btn => btn.classList.toggle('is-active', btn.dataset.unit === unit));
-
-    if (schedule.length) calculateStandard();
-  }
-
-  termUnitBtns.forEach(btn => btn.addEventListener('click', () => setTermUnit(btn.dataset.unit)));
 
   // ── Yearly aggregation ────────────────────────────────────────
 
@@ -815,8 +777,7 @@ export function initLoan() {
 
     const amount   = parseNum(amountInput.value);
     const rate     = parseNum(rateInput.value) / 100;
-    const termRaw  = parseNum(termInput.value);
-    const term     = termUnit === 'years' ? Math.round(termRaw * 12) : Math.round(termRaw);
+    const term     = parseInt(termInput.value, 10);
     const payment  = monthlyPayment(amount, rate, term);
     const sched    = amortizationSchedule(amount, rate, term);
 
@@ -842,7 +803,7 @@ export function initLoan() {
     const inputs = { amount, rate: parseNum(rateInput.value), term };
     const result = { payment, totalPaid, totalInterest, totalPrincipal };
 
-    setState('calculators.loan.inputs', { amount: amountInput.value, rate: rateInput.value, term: termInput.value, termUnit });
+    setState('calculators.loan.inputs', { amount: amountInput.value, rate: rateInput.value, term: termInput.value });
     setState('calculators.loan.result', result);
     setState('calculators.loan.schedule', schedule);
 
@@ -861,10 +822,9 @@ export function initLoan() {
   // ── Restore saved state ───────────────────────────────────────
 
   const savedStd = getStateAt('calculators.loan.inputs') || {};
-  if (savedStd.amount)   amountInput.value = savedStd.amount;
-  if (savedStd.rate)     rateInput.value   = savedStd.rate;
-  if (savedStd.term)     termInput.value   = savedStd.term;
-  if (savedStd.termUnit) setTermUnit(savedStd.termUnit);
+  if (savedStd.amount) amountInput.value = savedStd.amount;
+  if (savedStd.rate)   rateInput.value   = savedStd.rate;
+  if (savedStd.term)   termInput.value   = savedStd.term;
 
   // ── Event listeners ───────────────────────────────────────────
 
