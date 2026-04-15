@@ -1,0 +1,30 @@
+<!-- generate-icons.svg — Reference / template file only, not used directly by the app.
+
+This file documents how to reproduce the FinCalc icon at each required PNG size
+from the source icon.svg.
+
+REQUIRED PNG SIZES
+==================
+  72×72    → assets/icons/icon-72.png   (purpose: any)
+  96×96    → assets/icons/icon-96.png   (purpose: any)
+  128×128  → assets/icons/icon-128.png  (purpose: any)
+  144×144  → assets/icons/icon-144.png  (purpose: any)
+  152×152  → assets/icons/icon-152.png  (purpose: any)
+  192×192  → assets/icons/icon-192.png  (purpose: any maskable)
+  384×384  → assets/icons/icon-384.png  (purpose: any)
+  512×512  → assets/icons/icon-512.png  (purpose: any maskable)
+
+Note: "maskable" icons (192 and 512) must have their key content within the
+central 80% "safe zone" of the canvas. The icon.svg already accounts for this
+by keeping all art inside a 96px inset on each edge at 512px.
+
+ADDITIONAL ASSETS NEEDED
+=========================
+  assets/icons/icon-192.png      — Apple Touch Icon (referenced in index.html)
+  assets/icons/screenshot-mobile.png — 390×844 PNG (referenced in manifest.json)
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Reuse source icon — see icon.svg for the canonical definition -->
+  <use href="icon.svg#root"/>
+</svg>

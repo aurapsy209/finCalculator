@@ -1,0 +1,290 @@
+/* ============================================================
+   DARK-MODE.CSS — Dark Theme Overrides
+   FinCalc · Phase 1
+   ============================================================ */
+
+/*
+   Core color token overrides are defined in base.css
+   on the [data-theme="dark"] selector.
+   This file handles component-specific dark overrides
+   that can't be expressed via tokens alone.
+*/
+
+/* ── Select dropdown dark background ───────────────────────── */
+[data-theme="dark"] .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+[data-theme="dark"] select option {
+  background: #1E293B;
+  color:      #F1F5F9;
+}
+
+/* ── Input autofill ── */
+[data-theme="dark"] .input:-webkit-autofill,
+[data-theme="dark"] .input:-webkit-autofill:hover,
+[data-theme="dark"] .input:-webkit-autofill:focus {
+  -webkit-box-shadow:   0 0 0 1000px #1E293B inset;
+  -webkit-text-fill-color: #F1F5F9;
+  caret-color:          #F1F5F9;
+}
+
+/* ── Scrollbar ── */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width:  8px;
+  height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #0F172A;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background:    #334155;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* ── Theme Toggle Button States ── */
+[data-theme="dark"] .icon-btn {
+  background:   #1E293B;
+  border-color: #334155;
+  color:        #94A3B8;
+}
+
+[data-theme="dark"] .icon-btn:hover {
+  background:   #273549;
+  color:        #F1F5F9;
+  border-color: #475569;
+}
+
+/* ── Quick card hover in dark ── */
+[data-theme="dark"] .quick-card {
+  background:   #1E293B;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .quick-card:hover {
+  border-color: rgba(96, 165, 250, 0.4);
+  background:   rgba(37, 99, 235, 0.1);
+}
+
+/* ── Stat card dark ── */
+[data-theme="dark"] .stat-card {
+  background:   #1E293B;
+  border-color: #334155;
+}
+
+/* ── Card dark ── */
+[data-theme="dark"] .card {
+  background:   #1E293B;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .card__header {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .card__footer {
+  background:   #273549;
+  border-color: #334155;
+}
+
+/* ── Table dark ── */
+[data-theme="dark"] .table thead {
+  background: #273549;
+}
+
+[data-theme="dark"] .table th {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .table td {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .table tfoot td {
+  background:    #273549;
+  border-top-color: #475569;
+}
+
+[data-theme="dark"] .table-wrap {
+  border-color: #334155;
+}
+
+/* ── More sheet dark ── */
+[data-theme="dark"] .more-sheet {
+  background: #1E293B;
+}
+
+[data-theme="dark"] .more-sheet__handle {
+  background: #334155;
+}
+
+[data-theme="dark"] .more-sheet__item {
+  background: #273549;
+}
+
+/* ── Progress bar dark track ── */
+[data-theme="dark"] .progress {
+  background: #334155;
+}
+
+/* ── Skeleton dark ── */
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    #334155 25%,
+    #273549 50%,
+    #334155 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ── Range dark track ── */
+[data-theme="dark"] .range {
+  background: #334155;
+}
+
+[data-theme="dark"] .range::-webkit-slider-thumb {
+  border-color: #1E293B;
+}
+
+[data-theme="dark"] .range::-moz-range-thumb {
+  border-color: #1E293B;
+}
+
+/* ── Toggle dark track ── */
+[data-theme="dark"] .toggle__track {
+  background: #334155;
+}
+
+/* ── Tippy tooltips dark ── */
+[data-theme="dark"] .tippy-box[data-theme="fincalc"] {
+  background:   #F1F5F9;
+  color:        #0F172A;
+}
+
+[data-theme="dark"] .tippy-box[data-theme="fincalc"][data-placement^="top"] .tippy-arrow::before {
+  border-top-color: #F1F5F9;
+}
+
+[data-theme="dark"] .tippy-box[data-theme="fincalc"][data-placement^="bottom"] .tippy-arrow::before {
+  border-bottom-color: #F1F5F9;
+}
+
+[data-theme="dark"] .tippy-box[data-theme="fincalc"][data-placement^="left"] .tippy-arrow::before {
+  border-left-color: #F1F5F9;
+}
+
+[data-theme="dark"] .tippy-box[data-theme="fincalc"][data-placement^="right"] .tippy-arrow::before {
+  border-right-color: #F1F5F9;
+}
+
+/* ── Focus ring in dark mode ── */
+[data-theme="dark"] :focus-visible {
+  outline-color: #60A5FA;
+}
+
+[data-theme="dark"] .input:focus {
+  border-color: #60A5FA;
+  box-shadow:   0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+[data-theme="dark"] .textarea:focus,
+[data-theme="dark"] .select:focus {
+  border-color: #60A5FA;
+  box-shadow:   0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+/* ── Result box dark gradient ── */
+[data-theme="dark"] .result-box {
+  background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 100%);
+}
+
+/* ── Welcome banner dark ── */
+[data-theme="dark"] .welcome-banner {
+  background: linear-gradient(135deg, #1D4ED8 0%, #6D28D9 60%, #BE185D 100%);
+}
+
+/* ── Divider dark ── */
+[data-theme="dark"] .divider {
+  background: #334155;
+}
+
+[data-theme="dark"] .divider--label::before,
+[data-theme="dark"] .divider--label::after {
+  background: #334155;
+}
+
+/* ── Empty state dark ── */
+[data-theme="dark"] .empty-state__icon {
+  background: #273549;
+}
+
+/* ── Theme toggle icon visibility ── */
+.theme-icon-light { display: block; }
+.theme-icon-dark  { display: none;  }
+
+[data-theme="dark"] .theme-icon-light { display: none;  }
+[data-theme="dark"] .theme-icon-dark  { display: block; }
+
+/* ── Body scrollbar light ── */
+::-webkit-scrollbar {
+  width:  8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+  background:    var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-subtle);
+}
+
+/* ── Print ── */
+@media print {
+  .nav-sidebar,
+  .nav-bottom,
+  .top-bar,
+  .more-sheet-overlay {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left:    0 !important;
+    padding-top:    0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  body {
+    background: #fff;
+    color:      #000;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:   0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:  0.01ms !important;
+    scroll-behavior:      auto !important;
+  }
+}

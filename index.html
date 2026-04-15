@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FinCalc — Smart financial calculators for compound interest, loans, savings, retirement, and more.">
+  <meta name="theme-color" content="#F0F4F8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FinCalc">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <title>Dashboard — FinCalc</title>
+
+  <!-- ── Stylesheets ── -->
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/calculators.css">
+  <link rel="stylesheet" href="styles/dark-mode.css">
+  <link rel="stylesheet" href="styles/converters.css">
+  <link rel="stylesheet" href="styles/dashboard.css">
+
+  <!-- ── CDN: Animate.css ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4/animate.min.css">
+  <!-- ── CDN: Tippy.js CSS ── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy.css">
+
+  <!-- Prevent theme flash: apply stored theme before render -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('fincalc-theme');
+        if (t === 'dark' || t === 'light') {
+          document.documentElement.dataset.theme = t;
+          document.querySelector('meta[name="theme-color"]').content =
+            t === 'dark' ? '#0F172A' : '#F0F4F8';
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.dataset.theme = 'dark';
+          document.querySelector('meta[name="theme-color"]').content = '#0F172A';
+        }
+      } catch(e) {}
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- ════════════════════════════════════════════════════════
+       APP SHELL
+       ════════════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── Mobile Top Bar ─────────────────────────────────── -->
+    <header class="top-bar" role="banner">
+      <div class="top-bar__brand">
+        <div class="top-bar__logo" aria-hidden="true">
+          <!-- Chart / finance icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div class="top-bar__wordmark">
+          <span class="top-bar__name">FinCalc</span>
+          <span class="top-bar__tagline">Smart Finance Tools</span>
+        </div>
+      </div>
+      <div class="top-bar__actions">
+        <button
+          id="theme-toggle"
+          class="icon-btn"
+          aria-label="Switch to dark mode"
+          title="Switch to dark mode"
+          type="button"
+        >
+          <!-- Sun icon (shown in light mode) -->
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1"  x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon icon (shown in dark mode) -->
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <!-- PWA Install button — only shown when browser fires beforeinstallprompt -->
+        <button
+          id="pwa-install-btn"
+          class="icon-btn"
+          aria-label="Install app"
+          title="Install FinCalc"
+          style="display:none"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Sidebar Nav (Tablet / Desktop) ─────────────────── -->
+    <nav class="nav-sidebar" aria-label="Main navigation">
+      <!-- Sidebar Header / Brand -->
+      <div class="nav-sidebar__header">
+        <div class="nav-sidebar__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div class="nav-sidebar__wordmark">
+          <span class="nav-sidebar__name">FinCalc</span>
+          <span class="nav-sidebar__tagline">Smart Finance Tools</span>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <ul class="nav-sidebar__list" role="list">
+
+        <li class="nav-sidebar__item">
+          <a href="#dashboard" class="nav-sidebar__link" data-section="dashboard"
+             data-tippy-content="Dashboard" aria-label="Dashboard">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Dashboard</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#compound-interest" class="nav-sidebar__link" data-section="compound-interest"
+             data-tippy-content="Compound Interest" aria-label="Compound Interest">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Compound Interest</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#loan" class="nav-sidebar__link" data-section="loan"
+             data-tippy-content="Loan / Amortization" aria-label="Loan / Amortization">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Loan / Amortization</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#savings" class="nav-sidebar__link" data-section="savings"
+             data-tippy-content="Savings Goal" aria-label="Savings Goal">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Savings Goal</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#retirement" class="nav-sidebar__link" data-section="retirement"
+             data-tippy-content="Retirement" aria-label="Retirement Calculator">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M20 21a8 8 0 1 0-16 0"></path>
+                <path d="M12 12v4"></path>
+                <path d="M10 16h4"></path>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Retirement</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#investment" class="nav-sidebar__link" data-section="investment"
+             data-tippy-content="Investment Return" aria-label="Investment Return">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Investment Return</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#converters" class="nav-sidebar__link" data-section="converters"
+             data-tippy-content="Converters" aria-label="Unit & Currency Converters">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m16 3 4 4-4 4"></path>
+                <path d="M20 7H4"></path>
+                <path d="m8 21-4-4 4-4"></path>
+                <path d="M4 17h16"></path>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Converters</span>
+          </a>
+        </li>
+
+        <li class="nav-sidebar__item">
+          <a href="#percentage" class="nav-sidebar__link" data-section="percentage"
+             data-tippy-content="Percentage Calculator" aria-label="Percentage Calculator">
+            <span class="nav-sidebar__link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="5" x2="5" y2="19"></line>
+                <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                <circle cx="17.5" cy="17.5" r="2.5"></circle>
+              </svg>
+            </span>
+            <span class="nav-sidebar__link-label">Percentage</span>
+          </a>
+        </li>
+
+      </ul>
+
+      <!-- Sidebar Footer: Theme Toggle -->
+      <div class="nav-sidebar__footer">
+        <button
+          id="theme-toggle-sidebar"
+          class="nav-sidebar__link btn-ghost"
+          style="width:100%; justify-content:flex-start; border:none; cursor:pointer; background:none;"
+          aria-label="Switch to dark mode"
+          title="Switch to dark mode"
+          type="button"
+        >
+          <span class="nav-sidebar__link-icon" aria-hidden="true">
+            <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1"  x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </span>
+          <span class="nav-sidebar__link-label" id="theme-label">Dark Mode</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ── Main Content ────────────────────────────────────── -->
+    <main class="main-content" id="main-content" role="main">
+      <div class="main-content__inner">
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 1: DASHBOARD
+             ══════════════════════════════════════════════════ -->
+        <section id="dashboard" class="calc-section" aria-label="Dashboard">
+
+          <!-- Welcome Banner -->
+          <div class="welcome-banner animate__animated animate__fadeIn">
+            <div class="welcome-banner__eyebrow">Welcome to FinCalc</div>
+            <h1 class="welcome-banner__title">Your Smart Finance Hub</h1>
+            <p class="welcome-banner__subtitle">
+              Professional-grade calculators for every financial decision —
+              from compound interest to retirement planning.
+            </p>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="dashboard-grid" style="margin-bottom: var(--space-6);">
+
+            <div class="stat-card">
+              <div class="stat-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+              </div>
+              <div class="stat-card__label">Calculators Available</div>
+              <div class="stat-card__value">8</div>
+              <div class="stat-card__change stat-card__change--up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                All tools ready
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div class="stat-card__label">Privacy</div>
+              <div class="stat-card__value stat-card__value--success" style="font-size: var(--text-xl);">100%</div>
+              <div class="stat-card__change stat-card__change--up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                All calculations local
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="stat-card__label">No Server Required</div>
+              <div class="stat-card__value" style="font-size: var(--text-xl);">Offline</div>
+              <div class="stat-card__change" style="color: var(--color-text-muted);">
+                Works without internet
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Access Grid -->
+          <div class="page-header">
+            <div class="page-header__eyebrow">Calculators</div>
+            <h2 class="page-header__title" style="font-size: var(--text-xl);">Quick Access</h2>
+            <p class="page-header__description">Select a calculator to get started.</p>
+          </div>
+
+          <div class="dashboard-grid">
+
+            <button class="quick-card" data-target="compound-interest" tabindex="0"
+                    aria-label="Open Compound Interest calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+              </div>
+              <div class="quick-card__name">Compound Interest</div>
+              <div class="quick-card__desc">See how your money grows over time with compounding returns.</div>
+            </button>
+
+            <button class="quick-card" data-target="loan" tabindex="0"
+                    aria-label="Open Loan Amortization calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+              </div>
+              <div class="quick-card__name">Loan / Amortization</div>
+              <div class="quick-card__desc">Calculate monthly payments and full amortization schedule.</div>
+            </button>
+
+            <button class="quick-card" data-target="savings" tabindex="0"
+                    aria-label="Open Savings Goal calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                </svg>
+              </div>
+              <div class="quick-card__name">Savings Goal</div>
+              <div class="quick-card__desc">Figure out how long it takes to reach your savings target.</div>
+            </button>
+
+            <button class="quick-card" data-target="retirement" tabindex="0"
+                    aria-label="Open Retirement calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4"></circle>
+                  <path d="M20 21a8 8 0 1 0-16 0"></path>
+                </svg>
+              </div>
+              <div class="quick-card__name">Retirement</div>
+              <div class="quick-card__desc">Plan your retirement savings and project your nest egg.</div>
+            </button>
+
+            <button class="quick-card" data-target="investment" tabindex="0"
+                    aria-label="Open Investment Return calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div class="quick-card__name">Investment Return</div>
+              <div class="quick-card__desc">Calculate ROI, CAGR, and total portfolio growth.</div>
+            </button>
+
+            <button class="quick-card" data-target="converters" tabindex="0"
+                    aria-label="Open Converters">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m16 3 4 4-4 4"></path>
+                  <path d="M20 7H4"></path>
+                  <path d="m8 21-4-4 4-4"></path>
+                  <path d="M4 17h16"></path>
+                </svg>
+              </div>
+              <div class="quick-card__name">Converters</div>
+              <div class="quick-card__desc">Convert currencies, units, and financial metrics instantly.</div>
+            </button>
+
+            <button class="quick-card" data-target="percentage" tabindex="0"
+                    aria-label="Open Percentage Calculator">
+              <div class="quick-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="19" y1="5" x2="5" y2="19"></line>
+                  <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                  <circle cx="17.5" cy="17.5" r="2.5"></circle>
+                </svg>
+              </div>
+              <div class="quick-card__name">Percentage</div>
+              <div class="quick-card__desc">Calculate percentages, changes, and proportions easily.</div>
+            </button>
+
+          </div>
+
+          <!-- Info Alert -->
+          <div class="alert alert--info" style="margin-top: var(--space-8);" role="note">
+            <span class="alert__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </span>
+            <div>
+              <div class="alert__title">All calculations happen in your browser</div>
+              No data is ever sent to a server. Your financial information stays completely private.
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 2: COMPOUND INTEREST
+             ══════════════════════════════════════════════════ -->
+        <section id="compound-interest" class="calc-section" aria-label="Compound Interest Calculator">
+          <!-- Populated by js/calculators/compound-interest.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 3: LOAN / AMORTIZATION
+             ══════════════════════════════════════════════════ -->
+        <section id="loan" class="calc-section" aria-label="Loan and Amortization Calculator">
+          <!-- Populated by js/calculators/loan-amortization.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 4: SAVINGS GOAL
+             ══════════════════════════════════════════════════ -->
+        <section id="savings" class="calc-section" aria-label="Savings Goal Calculator">
+          <!-- Populated by js/calculators/savings-goal.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 5: RETIREMENT
+             ══════════════════════════════════════════════════ -->
+        <section id="retirement" class="calc-section" aria-label="Retirement Calculator">
+          <!-- Populated by js/calculators/retirement.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 6: INVESTMENT RETURN
+             ══════════════════════════════════════════════════ -->
+        <section id="investment" class="calc-section" aria-label="Investment Return Calculator">
+          <!-- Populated by js/calculators/investment-return.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 7: CONVERTERS
+             ══════════════════════════════════════════════════ -->
+        <section id="converters" class="calc-section" aria-label="Unit and Currency Converters">
+          <!-- Populated by js/converters/unit-converter.js -->
+        </section>
+
+        <!-- ══════════════════════════════════════════════════
+             SECTION 8: PERCENTAGE CALCULATOR
+             ══════════════════════════════════════════════════ -->
+        <section id="percentage" class="calc-section" aria-label="Percentage Calculator">
+          <!-- Percentage calculator is now embedded in the Converters section (#converters → Percentage tab).
+               Navigation to #percentage will redirect via router or simply show this note. -->
+        </section>
+
+      </div><!-- /.main-content__inner -->
+    </main>
+
+    <!-- ── Mobile Bottom Navigation ───────────────────────── -->
+    <nav class="nav-bottom" aria-label="Bottom navigation">
+
+      <a href="#dashboard" class="nav-bottom__item" data-section="dashboard" aria-label="Dashboard">
+        <span class="nav-bottom__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+        </span>
+        <span class="nav-bottom__label">Home</span>
+      </a>
+
+      <a href="#compound-interest" class="nav-bottom__item" data-section="compound-interest"
+         aria-label="Compound Interest">
+        <span class="nav-bottom__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+            <polyline points="17 6 23 6 23 12"></polyline>
+          </svg>
+        </span>
+        <span class="nav-bottom__label">Interest</span>
+      </a>
+
+      <a href="#loan" class="nav-bottom__item" data-section="loan" aria-label="Loan">
+        <span class="nav-bottom__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+        </span>
+        <span class="nav-bottom__label">Loan</span>
+      </a>
+
+      <a href="#savings" class="nav-bottom__item" data-section="savings" aria-label="Savings">
+        <span class="nav-bottom__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+          </svg>
+        </span>
+        <span class="nav-bottom__label">Savings</span>
+      </a>
+
+      <!-- "More" button — opens slide-up sheet -->
+      <button class="nav-bottom__item" id="btn-more" type="button"
+              aria-label="More calculators" aria-expanded="false" aria-controls="more-sheet">
+        <span class="nav-bottom__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="19" cy="12" r="1"></circle>
+            <circle cx="5"  cy="12" r="1"></circle>
+          </svg>
+        </span>
+        <span class="nav-bottom__label">More</span>
+      </button>
+
+    </nav>
+
+    <!-- ── More Sheet (Mobile slide-up) ───────────────────── -->
+    <div class="more-sheet-overlay" id="more-sheet-overlay" role="dialog"
+         aria-modal="true" aria-label="More calculators" tabindex="-1">
+      <div class="more-sheet" id="more-sheet">
+        <div class="more-sheet__handle" aria-hidden="true"></div>
+        <div class="more-sheet__title">More Calculators</div>
+        <div class="more-sheet__grid">
+
+          <button class="more-sheet__item" data-section="retirement" type="button">
+            <span class="more-sheet__item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M20 21a8 8 0 1 0-16 0"></path>
+              </svg>
+            </span>
+            <span class="more-sheet__item-label">Retirement</span>
+          </button>
+
+          <button class="more-sheet__item" data-section="investment" type="button">
+            <span class="more-sheet__item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </span>
+            <span class="more-sheet__item-label">Investment</span>
+          </button>
+
+          <button class="more-sheet__item" data-section="converters" type="button">
+            <span class="more-sheet__item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m16 3 4 4-4 4"></path>
+                <path d="M20 7H4"></path>
+                <path d="m8 21-4-4 4-4"></path>
+                <path d="M4 17h16"></path>
+              </svg>
+            </span>
+            <span class="more-sheet__item-label">Converters</span>
+          </button>
+
+          <button class="more-sheet__item" data-section="percentage" type="button">
+            <span class="more-sheet__item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="5" x2="5" y2="19"></line>
+                <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                <circle cx="17.5" cy="17.5" r="2.5"></circle>
+              </svg>
+            </span>
+            <span class="more-sheet__item-label">Percentage</span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <!-- ── CDN Scripts ─────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+
+  <!-- ── App Entry Point ──────────────────────────────────── -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
