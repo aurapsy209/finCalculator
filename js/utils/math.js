@@ -171,6 +171,128 @@ export function amortizationSchedule(principal, annualRate, months) {
   return schedule;
 }
 
+// ── Amortization With Extra Payments ─────────────────────────
+
+/**
+ * Generate an amortization schedule with optional extra payments.
+ * Terminates early when the balance reaches 0.
+ *
+ * @param {number} principal      - Loan amount
+ * @param {number} annualRate     - Annual interest rate as decimal
+ * @param {number} months         - Original loan term (used to compute base payment)
+ * @param {number} extraMonthly   - Extra amount added to each monthly payment (≥ 0)
+ * @param {number} lumpSum        - One-time extra payment (≥ 0)
+ * @param {number} lumpSumMonth   - Month number (1-indexed) to apply the lump sum
+ * @returns {Array<{
+ *   month:          number,
+ *   payment:        number,
+ *   principalPaid:  number,
+ *   interestPaid:   number,
+ *   balance:        number,
+ *   totalPrincipal: number,
+ *   totalInterest:  number
+ * }>}
+ */
+export function amortizationScheduleWithExtra(principal, annualRate, months, extraMonthly, lumpSum, lumpSumMonth) {
+  if (!isFinite(principal) || principal <= 0) return [];
+  if (!isFinite(months) || months <= 0) return [];
+  if (!isFinite(annualRate) || annualRate < 0) annualRate = 0;
+  if (!isFinite(extraMonthly) || extraMonthly < 0) extraMonthly = 0;
+  if (!isFinite(lumpSum) || lumpSum < 0) lumpSum = 0;
+  if (!isFinite(lumpSumMonth) || lumpSumMonth < 1) lumpSumMonth = 0;
+
+  const basePayment  = monthlyPayment(principal, annualRate, months);
+  const monthlyRate  = annualRate / 12;
+  const schedule     = [];
+
+  let balance        = principal;
+  let totalPrincipal = 0;
+  let totalInterest  = 0;
+  let month          = 0;
+
+  while (balance > 0 && month < months) {
+    month++;
+
+    const interestPaid = round(balance * monthlyRate);
+
+    // Principal = base payment + extra monthly + lump sum (if applicable)
+    let principalPaid = round(basePayment + extraMonthly - interestPaid);
+
+    // Apply lump sum in specified month (if loan hasn't paid off yet)
+    if (lumpSumMonth > 0 && month === lumpSumMonth) {
+      principalPaid = round(principalPaid + lumpSum);
+    }
+
+    // Clamp principal to remaining balance (final payment)
+    if (principalPaid < 0) principalPaid = 0;
+    if (principalPaid > balance) principalPaid = round(balance);
+
+    balance = round(balance - principalPaid);
+    if (balance < 0) balance = 0;
+
+    totalPrincipal = round(totalPrincipal + principalPaid);
+    totalInterest  = round(totalInterest + interestPaid);
+
+    schedule.push({
+      month:          month,
+      payment:        round(principalPaid + interestPaid),
+      principalPaid:  principalPaid,
+      interestPaid:   interestPaid,
+      balance:        balance,
+      totalPrincipal: totalPrincipal,
+      totalInterest:  totalInterest,
+    });
+
+    if (balance === 0) break;
+  }
+
+  return schedule;
+}
+
+/**
+ * Calculate the required monthly payment to pay off a loan in a target number
+ * of months, and compare against the original schedule.
+ *
+ * @param {number} principal      - Loan amount
+ * @param {number} annualRate     - Annual interest rate as decimal
+ * @param {number} originalMonths - Original loan term
+ * @param {number} targetMonths   - Desired payoff term
+ * @returns {{
+ *   requiredPayment:  number,   // monthly payment needed for target term
+ *   standardPayment:  number,   // original monthly payment
+ *   extraNeeded:      number,   // additional monthly payment vs standard (can be negative)
+ *   interestSaved:    number,   // interest saved vs original (can be negative)
+ *   monthsSaved:      number    // months saved vs original (can be negative)
+ * }}
+ */
+export function goalPayment(principal, annualRate, originalMonths, targetMonths) {
+  if (!isFinite(principal) || principal <= 0) return { requiredPayment: 0, standardPayment: 0, extraNeeded: 0, interestSaved: 0, monthsSaved: 0 };
+  if (!isFinite(annualRate) || annualRate < 0) annualRate = 0;
+  if (!isFinite(originalMonths) || originalMonths <= 0) originalMonths = 1;
+  if (!isFinite(targetMonths) || targetMonths <= 0) targetMonths = 1;
+
+  const requiredPayment = monthlyPayment(principal, annualRate, targetMonths);
+  const standardPayment = monthlyPayment(principal, annualRate, originalMonths);
+  const extraNeeded     = round(requiredPayment - standardPayment);
+
+  // Total interest for each schedule
+  const originalSchedule = amortizationSchedule(principal, annualRate, originalMonths);
+  const targetSchedule   = amortizationSchedule(principal, annualRate, targetMonths);
+
+  const originalInterest = originalSchedule.length ? originalSchedule[originalSchedule.length - 1].totalInterest : 0;
+  const targetInterest   = targetSchedule.length   ? targetSchedule[targetSchedule.length - 1].totalInterest   : 0;
+  const interestSaved    = round(originalInterest - targetInterest);
+  const monthsSaved      = originalMonths - targetMonths;
+
+  return {
+    requiredPayment,
+    standardPayment,
+    extraNeeded,
+    interestSaved,
+    monthsSaved,
+  };
+}
+
 // ── Savings Goal ──────────────────────────────────────────────
 
 /**

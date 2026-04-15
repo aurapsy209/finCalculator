@@ -62,6 +62,9 @@ smart-calculator/
 ### Core Calculators
 - [x] Compound Interest Calculator
 - [x] Loan / Amortization Calculator (with table + chart)
+  - [x] **Extra Payment Simulator** — extra monthly, lump sum, lump sum timing; shows new payoff date, months saved, interest saved
+  - [x] **Loan Comparison Mode** — side-by-side Loan A vs Loan B; highlights winner per metric
+  - [x] **Goal-Based Mode** — enter target payoff months; shows required payment, extra needed, interest saved
 - [x] Savings Goal Calculator
 - [x] Retirement Calculator
 - [x] Investment Return Calculator (Chart.js growth chart)
@@ -93,6 +96,7 @@ smart-calculator/
 | 4 | Charts + Converters — Chart.js integration, 3 converters | ✅ Done |
 | 5 | Dashboard, Export, Polish — PDF/CSV, tooltips, animations | ✅ Done |
 | 6 | QA & Testing — functional, mobile, offline, PWA, edge cases | ✅ Done |
+| 7 | Loan Calculator Enhanced — Extra Payments, Compare, Goal-Based | ✅ Done |
 
 ## Phase 6 — QA & Testing Checklist
 
@@ -208,4 +212,5 @@ For live reload during development: use VS Code Live Server extension.
 - 2026-04-12: Mobile-first confirmed as requirement — app must look and feel like a native finance app on mobile, not a desktop site squeezed down.
 - 2026-04-13: Phase 2 complete. Created state.js (central state, deep-merge, debounced LocalStorage, pub/sub), math.js (6 pure financial functions, unit converter, percentage calc), formatters.js (Intl.NumberFormat wrappers), validators.js (rule-based validation + DOM error helpers), tooltip.js (data-tooltip → Tippy.js bridge). Updated app.js to import and init state + tooltips modules.
 - 2026-04-14: Phase 5 complete. Created dashboard.js (live stat cards from saved results, quick-access grid, tips section, state subscription for live refresh), pdf-export.js (loan amortization PDF with paginated autoTable, compound interest PDF, retirement projection PDF — all via jsPDF + jsPDF-AutoTable), csv-export.js (amortization CSV + investment CSV — Papa Parse with manual fallback), dashboard.css (mobile-first grid for stat cards and quick cards, reduced-motion support). Wired CSV + PDF export buttons in loan-amortization.js. Removed old initDashboardActions() from app.js — dashboard.js handles all navigation. Version bumped to 1.0.0-phase5.
+- 2026-04-15: Phase 7 complete. Three new loan calculator modes added: (1) Extra Payment Simulator — extra monthly payment + one-time lump sum with configurable month; shows new payoff date, months saved, interest saved, comparison chart; `amortizationScheduleWithExtra()` added to math.js; (2) Loan Comparison Mode — side-by-side Loan A vs Loan B across 5 metrics; green highlights winner per row; (3) Goal-Based Mode — user enters desired payoff months; `goalPayment()` computes required payment, extra needed vs standard, interest saved; handles edge cases (goal longer than term, identical terms). Architecture: 4-tab mode switcher in loan section with `loan-mode-tab`/`loan-mode-panel` CSS pattern; `renderAmortizationChart()` refactored to accept `canvasId` + `containerId` params; `destroyChart()` called on tab switch to prevent canvas reuse errors. All modes persist state via `calculators.loan.*` paths. Version bumped to 1.0.0-phase7.
 - 2026-04-14: Phase 6 complete. QA audit performed. 6 bugs found and fixed: (1) router.js — `#percentage` hash now redirects to `#converters` and activates the Percentage sub-tab instead of showing an empty section; (2) loan-amortization.js — totalPaid calculation changed from `payment*(term-1)+lastRow.payment` to `lastRow.totalPrincipal + lastRow.totalInterest` to eliminate floating-point rounding drift; (3) service-worker.js — APP_SHELL expanded from 10 files to 35 files to include all CSS, all JS modules (calculators, converters, charts, export, utils, dashboard), ensuring true offline capability; (4) calculators.css — `.chart-container` given explicit responsive heights (220px mobile / 300px tablet / 360px desktop) so Chart.js canvas renders at the correct dimensions; (5) app.js — `initTooltips()` moved to after all calculator/converter modules initialize so dynamically-injected `data-tooltip` attributes on form inputs are captured correctly; (6) loan-amortization.js — export button initial tooltip text updated from stale "Available in Phase 5" to "Run calculation first to enable export". Version bumped to 1.0.0-phase6. All 52 Phase 6 checklist items pass.

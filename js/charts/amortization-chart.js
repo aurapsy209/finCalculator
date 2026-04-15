@@ -8,7 +8,7 @@
 
 import { createChart, getChart, getChartColors } from './chart-manager.js';
 
-const CANVAS_ID = 'amortization-canvas';
+const DEFAULT_CANVAS_ID = 'loan-amort-canvas';
 
 /**
  * Abbreviate a dollar amount for axis ticks.
@@ -209,32 +209,36 @@ function buildConfig(schedule) {
 /**
  * Inject canvas into the loan chart container and render the amortization chart.
  *
- * @param {Array} schedule - Full monthly schedule from amortizationSchedule()
+ * @param {Array}  schedule  - Full monthly schedule from amortizationSchedule()
+ * @param {string} [canvasId] - Canvas element ID to render into (default: 'loan-amort-canvas')
+ * @param {string} [containerId] - Container element ID (default: 'loan-chart-container')
  * @returns {Chart|null}
  */
-export function renderAmortizationChart(schedule) {
+export function renderAmortizationChart(schedule, canvasId = DEFAULT_CANVAS_ID, containerId = 'loan-chart-container') {
   if (!schedule || !schedule.length) return null;
 
-  const container = document.getElementById('loan-chart-container');
+  const container = document.getElementById(containerId);
   if (!container) return null;
 
-  container.innerHTML = `<canvas id="${CANVAS_ID}" aria-label="Amortization breakdown chart"></canvas>`;
+  container.innerHTML = `<canvas id="${canvasId}" aria-label="Amortization breakdown chart"></canvas>`;
 
-  return createChart(CANVAS_ID, buildConfig(schedule));
+  return createChart(canvasId, buildConfig(schedule));
 }
 
 /**
  * Update the existing amortization chart with a new schedule.
  * Falls back to renderAmortizationChart if no chart exists yet.
  *
- * @param {Array} schedule
+ * @param {Array}  schedule
+ * @param {string} [canvasId]
+ * @param {string} [containerId]
  * @returns {Chart|null}
  */
-export function updateAmortizationChart(schedule) {
+export function updateAmortizationChart(schedule, canvasId = DEFAULT_CANVAS_ID, containerId = 'loan-chart-container') {
   if (!schedule || !schedule.length) return null;
 
-  const chart = getChart(CANVAS_ID);
-  if (!chart) return renderAmortizationChart(schedule);
+  const chart = getChart(canvasId);
+  if (!chart) return renderAmortizationChart(schedule, canvasId, containerId);
 
   const chartData = prepareChartData(schedule);
 
