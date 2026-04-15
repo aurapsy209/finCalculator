@@ -76,12 +76,19 @@ const TEMPLATE = `
 
           <div class="form-field">
             <label class="form-label" for="loan-term">
-              Loan Term (Months) <span class="form-label__required" aria-hidden="true">*</span>
+              Loan Term <span class="form-label__required" aria-hidden="true">*</span>
             </label>
-            <input id="loan-term" class="form-input" type="text" inputmode="decimal"
-                   placeholder="360" autocomplete="off"
-                   data-tooltip="Total repayment period in months" aria-required="true">
-            <div class="field-hint">e.g. 360 months = 30 years &nbsp;|&nbsp; 60 months = 5 years</div>
+            <div style="display:flex;gap:var(--space-2);align-items:stretch;">
+              <input id="loan-term" class="form-input" type="text" inputmode="decimal"
+                     placeholder="30" autocomplete="off"
+                     data-tooltip="Repayment period — toggle between years and months" aria-required="true"
+                     style="flex:1;min-width:0;">
+              <div class="term-unit-toggle" role="group" aria-label="Term unit">
+                <button type="button" class="term-unit-btn is-active" data-unit="years">Yrs</button>
+                <button type="button" class="term-unit-btn" data-unit="months">Mo</button>
+              </div>
+            </div>
+            <div class="field-hint" id="loan-term-hint">e.g. 30 years = 360 months</div>
             <div class="field-error" role="alert" aria-live="polite"></div>
           </div>
 
@@ -150,13 +157,17 @@ const TEMPLATE = `
           <div class="amort-section__header">
             <div class="amort-section__title">Amortization Schedule</div>
             <div class="amort-controls">
+              <div class="term-unit-toggle" role="group" aria-label="Schedule view">
+                <button type="button" class="term-unit-btn is-active" id="loan-view-monthly">Monthly</button>
+                <button type="button" class="term-unit-btn" id="loan-view-yearly">Yearly</button>
+              </div>
               <button type="button" class="toggle-btn" id="loan-toggle-all">Show All</button>
             </div>
           </div>
           <div class="amort-table-wrap">
             <table class="amort-table" id="loan-amort-table" aria-label="Amortization schedule">
               <thead>
-                <tr>
+                <tr id="loan-table-head-row">
                   <th scope="col">#</th>
                   <th scope="col">Payment</th>
                   <th scope="col">Principal</th>
@@ -613,31 +624,142 @@ export function initLoan() {
   const outTotalInterest  = section.querySelector('#loan-total-interest');
   const outTotalPrincipal = section.querySelector('#loan-total-principal');
   const tableBody         = section.querySelector('#loan-table-body');
+  const tableHeadRow      = section.querySelector('#loan-table-head-row');
   const cardsEl           = section.querySelector('#loan-amort-cards');
   const prevBtn           = section.querySelector('#loan-prev-btn');
   const nextBtn           = section.querySelector('#loan-next-btn');
   const pageInfo          = section.querySelector('#loan-page-info');
   const toggleBtn         = section.querySelector('#loan-toggle-all');
+  const termHint          = section.querySelector('#loan-term-hint');
+  const termUnitBtns      = section.querySelectorAll('.term-unit-toggle .term-unit-btn');
+  const viewMonthlyBtn    = section.querySelector('#loan-view-monthly');
+  const viewYearlyBtn     = section.querySelector('#loan-view-yearly');
 
   let schedule      = [];
   let currentPage   = 1;
   let showAll       = false;
   let stdFirstDone  = false;
+  let termUnit      = 'years';    // 'years' | 'months'
+  let scheduleView  = 'monthly';  // 'monthly' | 'yearly'
 
-  // Restore standard inputs
-  const savedStd = getStateAt('calculators.loan.inputs') || {};
-  if (savedStd.amount) amountInput.value = savedStd.amount;
-  if (savedStd.rate)   rateInput.value   = savedStd.rate;
-  if (savedStd.term)   termInput.value   = savedStd.term;
+  // ── Term unit toggle ─────────────────────────────────────────
+
+  function setTermUnit(unit) {
+    const prev = termUnit;
+    termUnit   = unit;
+    const val  = parseNum(termInput.value);
+
+    // Convert the displayed value when switching units
+    if (isFinite(val) && val > 0) {
+      if (prev === 'years' && unit === 'months') {
+        termInput.value = String(Math.round(val * 12));
+      } else if (prev === 'months' && unit === 'years') {
+        termInput.value = String(Math.round(val / 12));
+      }
+    }
+
+    termInput.placeholder = unit === 'years' ? '30' : '360';
+    termHint.textContent  = unit === 'years'
+      ? 'e.g. 30 years = 360 months'
+      : 'e.g. 360 months = 30 years';
+
+    termUnitBtns.forEach(btn => btn.classList.toggle('is-active', btn.dataset.unit === unit));
+
+    if (schedule.length) calculateStandard();
+  }
+
+  termUnitBtns.forEach(btn => btn.addEventListener('click', () => setTermUnit(btn.dataset.unit)));
+
+  // ── Yearly aggregation ────────────────────────────────────────
+
+  function toYearlyRows(sched) {
+    const map = new Map();
+    sched.forEach(row => {
+      const yr = Math.ceil(row.month / 12);
+      if (!map.has(yr)) map.set(yr, { year: yr, payment: 0, principalPaid: 0, interestPaid: 0, balance: 0 });
+      const e = map.get(yr);
+      e.payment       += row.payment;
+      e.principalPaid += row.principalPaid;
+      e.interestPaid  += row.interestPaid;
+      e.balance        = row.balance; // end-of-year balance
+    });
+    return Array.from(map.values()).map(y => ({
+      year:          y.year,
+      payment:       Math.round(y.payment * 100) / 100,
+      principalPaid: Math.round(y.principalPaid * 100) / 100,
+      interestPaid:  Math.round(y.interestPaid * 100) / 100,
+      balance:       Math.round(y.balance * 100) / 100,
+    }));
+  }
+
+  // ── Schedule view toggle ──────────────────────────────────────
+
+  function setScheduleView(view) {
+    scheduleView = view;
+    viewMonthlyBtn.classList.toggle('is-active', view === 'monthly');
+    viewYearlyBtn.classList.toggle('is-active',  view === 'yearly');
+
+    if (view === 'yearly') {
+      // Yearly: update header, reset pagination, show all years (no pagination)
+      tableHeadRow.innerHTML = '<th scope="col">Year</th><th scope="col">Payment</th><th scope="col">Principal</th><th scope="col">Interest</th><th scope="col">End Balance</th>';
+      showAll     = true;
+      currentPage = 1;
+      toggleBtn.style.display = 'none';
+    } else {
+      tableHeadRow.innerHTML = '<th scope="col">#</th><th scope="col">Payment</th><th scope="col">Principal</th><th scope="col">Interest</th><th scope="col">Balance</th>';
+      showAll     = false;
+      currentPage = 1;
+      toggleBtn.style.display = '';
+    }
+
+    if (schedule.length) renderTable();
+  }
+
+  viewMonthlyBtn.addEventListener('click', () => setScheduleView('monthly'));
+  viewYearlyBtn.addEventListener('click',  () => setScheduleView('yearly'));
+
+  // ── Render table ─────────────────────────────────────────────
 
   function getPageRows() {
+    if (scheduleView === 'yearly') return toYearlyRows(schedule);
     if (showAll) return schedule;
     const start = (currentPage - 1) * PAGE_SIZE;
     return schedule.slice(start, start + PAGE_SIZE);
   }
 
   function renderTable() {
-    const rows       = getPageRows();
+    const rows = getPageRows();
+
+    if (scheduleView === 'yearly') {
+      // Yearly table — no year-group headers, just one row per year
+      tableBody.innerHTML = rows.map(row => `<tr>
+        <td>Year ${row.year}</td>
+        <td>${formatCurrency(row.payment)}</td>
+        <td>${formatCurrency(row.principalPaid)}</td>
+        <td>${formatCurrency(row.interestPaid)}</td>
+        <td>${formatCurrency(row.balance)}</td>
+      </tr>`).join('');
+
+      cardsEl.innerHTML = rows.map(row => `<div class="amort-card">
+        <div class="amort-card__header">
+          <span class="amort-card__month">Year ${row.year}</span>
+          <span class="amort-card__payment">${formatCurrency(row.payment)}</span>
+        </div>
+        <div class="amort-card__grid">
+          <div class="amort-card__item"><span class="amort-card__item-label">Principal</span><span class="amort-card__item-value">${formatCurrency(row.principalPaid)}</span></div>
+          <div class="amort-card__item"><span class="amort-card__item-label">Interest</span><span class="amort-card__item-value">${formatCurrency(row.interestPaid)}</span></div>
+          <div class="amort-card__item"><span class="amort-card__item-label">End Balance</span><span class="amort-card__item-value">${formatCurrency(row.balance)}</span></div>
+        </div>
+      </div>`).join('');
+
+      // Hide pagination in yearly mode
+      prevBtn.disabled     = true;
+      nextBtn.disabled     = true;
+      pageInfo.textContent = `${rows.length} year${rows.length !== 1 ? 's' : ''}`;
+      return;
+    }
+
+    // Monthly view
     const totalPages = Math.ceil(schedule.length / PAGE_SIZE);
     let tableHTML = '';
     let lastYear  = 0;
@@ -658,34 +780,32 @@ export function initLoan() {
     });
     tableBody.innerHTML = tableHTML;
 
-    let cardsHTML = '';
-    rows.forEach(row => {
-      cardsHTML += `<div class="amort-card">
-        <div class="amort-card__header">
-          <span class="amort-card__month">Month ${row.month}</span>
-          <span class="amort-card__payment">${formatCurrency(row.payment)}</span>
-        </div>
-        <div class="amort-card__grid">
-          <div class="amort-card__item"><span class="amort-card__item-label">Principal</span><span class="amort-card__item-value">${formatCurrency(row.principalPaid)}</span></div>
-          <div class="amort-card__item"><span class="amort-card__item-label">Interest</span><span class="amort-card__item-value">${formatCurrency(row.interestPaid)}</span></div>
-          <div class="amort-card__item"><span class="amort-card__item-label">Balance</span><span class="amort-card__item-value">${formatCurrency(row.balance)}</span></div>
-        </div>
-      </div>`;
-    });
-    cardsEl.innerHTML = cardsHTML;
+    cardsEl.innerHTML = rows.map(row => `<div class="amort-card">
+      <div class="amort-card__header">
+        <span class="amort-card__month">Month ${row.month}</span>
+        <span class="amort-card__payment">${formatCurrency(row.payment)}</span>
+      </div>
+      <div class="amort-card__grid">
+        <div class="amort-card__item"><span class="amort-card__item-label">Principal</span><span class="amort-card__item-value">${formatCurrency(row.principalPaid)}</span></div>
+        <div class="amort-card__item"><span class="amort-card__item-label">Interest</span><span class="amort-card__item-value">${formatCurrency(row.interestPaid)}</span></div>
+        <div class="amort-card__item"><span class="amort-card__item-label">Balance</span><span class="amort-card__item-value">${formatCurrency(row.balance)}</span></div>
+      </div>
+    </div>`).join('');
 
     if (showAll) {
-      prevBtn.disabled     = true;
-      nextBtn.disabled     = true;
-      pageInfo.textContent = `All ${schedule.length} rows`;
+      prevBtn.disabled      = true;
+      nextBtn.disabled      = true;
+      pageInfo.textContent  = `All ${schedule.length} rows`;
       toggleBtn.textContent = 'Show Less';
     } else {
-      prevBtn.disabled     = currentPage <= 1;
-      nextBtn.disabled     = currentPage >= totalPages;
-      pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${schedule.length} total)`;
+      prevBtn.disabled      = currentPage <= 1;
+      nextBtn.disabled      = currentPage >= totalPages;
+      pageInfo.textContent  = `Page ${currentPage} of ${totalPages} (${schedule.length} total)`;
       toggleBtn.textContent = 'Show All';
     }
   }
+
+  // ── Calculate ─────────────────────────────────────────────────
 
   function calculateStandard() {
     const aOk = vf(amountInput, RULES.amount);
@@ -693,17 +813,18 @@ export function initLoan() {
     const tOk = vf(termInput,   RULES.term);
     if (!aOk || !rOk || !tOk) return;
 
-    const amount  = parseNum(amountInput.value);
-    const rate    = parseNum(rateInput.value) / 100;
-    const term    = parseInt(termInput.value, 10);
-    const payment = monthlyPayment(amount, rate, term);
-    const sched   = amortizationSchedule(amount, rate, term);
+    const amount   = parseNum(amountInput.value);
+    const rate     = parseNum(rateInput.value) / 100;
+    const termRaw  = parseNum(termInput.value);
+    const term     = termUnit === 'years' ? Math.round(termRaw * 12) : Math.round(termRaw);
+    const payment  = monthlyPayment(amount, rate, term);
+    const sched    = amortizationSchedule(amount, rate, term);
 
     if (!isFinite(payment) || !sched.length) return;
 
     schedule    = sched;
     currentPage = 1;
-    showAll     = false;
+    if (scheduleView === 'monthly') showAll = false;
 
     const lastRow        = sched[sched.length - 1];
     const totalInterest  = lastRow.totalInterest;
@@ -721,7 +842,7 @@ export function initLoan() {
     const inputs = { amount, rate: parseNum(rateInput.value), term };
     const result = { payment, totalPaid, totalInterest, totalPrincipal };
 
-    setState('calculators.loan.inputs', { amount: amountInput.value, rate: rateInput.value, term: termInput.value });
+    setState('calculators.loan.inputs', { amount: amountInput.value, rate: rateInput.value, term: termInput.value, termUnit });
     setState('calculators.loan.result', result);
     setState('calculators.loan.schedule', schedule);
 
@@ -736,6 +857,16 @@ export function initLoan() {
       setTimeout(() => resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
     }
   }
+
+  // ── Restore saved state ───────────────────────────────────────
+
+  const savedStd = getStateAt('calculators.loan.inputs') || {};
+  if (savedStd.amount)   amountInput.value = savedStd.amount;
+  if (savedStd.rate)     rateInput.value   = savedStd.rate;
+  if (savedStd.term)     termInput.value   = savedStd.term;
+  if (savedStd.termUnit) setTermUnit(savedStd.termUnit);
+
+  // ── Event listeners ───────────────────────────────────────────
 
   [amountInput, rateInput, termInput].forEach(el => el.addEventListener('input', calculateStandard));
   calcBtn.addEventListener('click', calculateStandard);
